@@ -69,7 +69,7 @@ int main(int argc, char **argv){
 
   typedef struct dados{
     char RptDt;
-    char TckrSymb;
+    char TckrSymb[size];
     char Asst;
     char XprtnDt;
     char ExrcPric;
@@ -78,9 +78,9 @@ int main(int argc, char **argv){
     char TtlBlckPos;
     char UcvrdQty;
 
-  } campo[size];
+  } dados;
   
-  campo codigo_de_negociacao;
+  dados *coluna = calloc( 17, sizeof(dados));
 
   printf("=====Dados dos Derivativos=====\n");
   for(int i = 0; i >= 0; i++){
@@ -91,16 +91,21 @@ int main(int argc, char **argv){
     }
 
     tokens = split(line, ";", &size);
-    
-    for (int j = 0; i < 17; i++)
+    coluna = realloc(coluna, sizeof(dados) * 17);
+    for (int j = 0; j < 17; j++)
     {
       if (j == 1)
       {
-        codigo_de_negociacao->TckrSymb = *tokens[j];
+        strcpy(coluna->TckrSymb, tokens[j]);
       }
-      
+      /*if (j == 9)
+      {
+        strcpy(coluna->CvrdQty, tokens[j]);
+      }*/
+
     }
-    printf("teste: %s", codigo_de_negociacao->TckrSymb);
+    //printf("%s  |", coluna->CvrdQty);
+    printf("%s\n", coluna->TckrSymb);
     //printline(tokens, size);
     free(tokens);
     free(line);
@@ -118,7 +123,9 @@ int main(int argc, char **argv){
     free(tokens);
     free(line);
   }
-
+  printf("size :%i", size);
   fclose(arquivo);
   fclose(arquivo2);
 }
+
+//chamar readline em um laço para contar quantas linhas tem o arquivo e usar no tamanho dos dados da estrutura
