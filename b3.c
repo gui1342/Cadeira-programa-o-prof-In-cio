@@ -82,7 +82,7 @@ char *readline(FILE *data)
 
 void free_tokens(char **tokens)
 {
-  free(tokens[0]);
+  //free(tokens[0]);
   free(tokens);
   tokens = NULL;
 }
@@ -99,43 +99,30 @@ typedef struct colunas
     char XprtnDt[11];
     char ExrcPric[9];
     char OptnStyle[9];
-    int CvrdQty[16];
-    int TtlBlckPos[13];
-    int UcvrdQty[16];
+    long int CvrdQty[16];
+    long int TtlBlckPos[13];
+    long int UcvrdQty[16];
   } 
   dados;
 
 void save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
  char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2){
-  malloc_tokens(line, &size);
-  malloc_tokens(line2, &size2);
-  coluna = malloc(tam * sizeof(dados));
+
+  int fim = 0;
   for(int i = 0; i >= 0; i++){
     line2 = readline(arquivo2);
-    line = readline(arquivo);
-    tokens = split(line, ";", &size);
-    if (line == NULL && line2 == NULL)
-    {
+    if(line2 == NULL){
       break;
     }
-    
-    do
-    {
-      if (instruments != NULL)
-      {
-        free_tokens(instruments);
-        instruments = NULL;
-      }
-      line2 = readline(arquivo2);
-      if (line2 != NULL)
-      {
-        instruments = split(line2, ";", &size2);
-      }
-      
-    } while ((strcmp(tokens[1], instruments[1]) != 0) && line2 != NULL);
+    line = readline(arquivo);
+    if(line == NULL){
+      fim = 1;
+    }
+    tokens = split(line, ";", &size);
+    instruments = split(line2, ";", &size2);
   
     strcpy(coluna[i].TckrSymb, instruments[1]);
-    if (strcmp(tokens[1], coluna[i].TckrSymb))
+    if (strcmp(tokens[1], coluna[i].TckrSymb) == 0 && line2 != NULL)
     {
       strcpy(coluna[i].RptDt, instruments[0]);
       strcpy(coluna[i].Asst, instruments[2]);
@@ -145,9 +132,10 @@ void save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tok
       *coluna[i].CvrdQty = atoi(tokens[9]);
       *coluna[i].TtlBlckPos = atoi(tokens[10]);
       *coluna[i].UcvrdQty = atoi(tokens[11]);
+      tam++;
     }
     else
-    {
+    { coluna = realloc(coluna, sizeof(dados) * tam);
       strcpy(coluna[i].RptDt, instruments[0]);
       strcpy(coluna[i].Asst, instruments[2]);
       strcpy(coluna[i].XprtnDt, instruments[7]);
@@ -155,29 +143,32 @@ void save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tok
       strcpy(coluna[i].OptnStyle, instruments[36]);
       *coluna[i].CvrdQty = 0;
       *coluna[i].TtlBlckPos = 0;
-      *coluna[i].UcvrdQty, 0;
-      
-      if (line != NULL)
+      *coluna[i].UcvrdQty = 0;
+      tam++;
+      coluna = realloc(coluna, sizeof(dados) * tam);
+      if (fim == 0)
       {
         strcpy(coluna[i+1].TckrSymb, tokens[1]);
         strcpy(coluna[i+1].RptDt, tokens[0]);
         strcpy(coluna[i+1].Asst, tokens[3]);
-        strcpy(coluna[i+1].XprtnDt, " ");
-        strcpy(coluna[i+1].ExrcPric, " ");
-        strcpy(coluna[i+1].OptnStyle, " ");
+        strcpy(coluna[i+1].XprtnDt, " \0");
+        strcpy(coluna[i+1].ExrcPric, " \0");
+        strcpy(coluna[i+1].OptnStyle, " \0");
         *coluna[i+1].CvrdQty = atoi(tokens[9]);
         *coluna[i+1].TtlBlckPos = atoi(tokens[10]);
         *coluna[i+1].UcvrdQty = atoi(tokens[11]);
+        i++;
+        tam++; 
+        coluna = realloc(coluna, sizeof(dados) * tam);
       }
-        i++;  
-    }tam++;
-      
-    coluna = realloc(coluna, (tam * sizeof(dados)));
+    }
 
     free_tokens(tokens);
-    free(line);
     free_tokens(instruments);
+    free(line);
     free(line2);
+    line = NULL; 
+    line2 = NULL;
   }
 }
 
@@ -190,15 +181,15 @@ int main(int argc, char **argv)
   char **tokens = NULL, **instruments = NULL;
   unsigned int size, size2;
   char *line, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
-  int tam = 9;
+  int tam = 5;
   dados *coluna;
-  coluna = malloc(tam * sizeof(dados));
+  coluna = (dados *) (malloc(sizeof(dados) * tam));
 
   printf("=====Dados dos Derivativos=====\n");
   printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
   save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
-printf("teste\n");
-  for (int i = 0; i < 8; i++)
+  
+  /*for (int i = 0; i < 8; i++)
   {
     line = readline(arquivo);
     tokens = split(line, ";", &size);
@@ -224,9 +215,9 @@ printf("teste\n");
     free_tokens(tokens);
     tam++;
     coluna = realloc(coluna, (tam * sizeof(dados)));
-  } 
+  } */
   
-  free_tokens(instruments);
+  //free_tokens(instruments);
 
   fclose(arquivo);
   fclose(arquivo2);
