@@ -2,130 +2,232 @@
 #include <stdlib.h>
 #include <string.h>
 
-char **split(char *line, char *sep, unsigned *length){
-    int max = 64;
-    *length = 0;
-    char **array = NULL;
-
-    array = (char**) malloc(sizeof(char*) * max);
-    char *token = strtok(line, sep);
-    while(token != NULL){
-        array[*length] = token;
-        (*length)++;
-        if(*length==max){
-            max <<= 1;
-            array = realloc(array, max);
-        }
-        token = strtok(NULL, sep);
-    }
-    array = realloc(array, *length * sizeof(char*));
-    return array;
-}
-
-void check_endline(FILE *data, char *line, int i){
-    char c = fgetc(data);
-    if( c != '\n' ){
-        ungetc(c, data);
-    }
-}
-
-char* readline(FILE *data){
-    int size = 4096;
-    char *line = malloc(sizeof(char) * size);
-    int i = 0;
-    do{
-        fread(&line[i], sizeof(char), 1, data);
-        i++;
-        if( i == size ){
-            size<<=1;
-            line = realloc(line, sizeof(char) * size);
-        }
-        if(feof(data)){
-          return line = NULL;
-        }
-    }while( line[i-1] != '\n' && line[i-1] != '\r' );
-    line[i-1] = '\0';
-    check_endline(data, line, i);
-    line = realloc(line, strlen(line)+1);
-    return line;
-}
-
-void printline(char **tokens, unsigned size){
-  for(int i = 0; i < size; i++){
-    if(i>=7 && i <= 9)
-      printf("%9s | ", tokens[i]);
-    else
-    printf("%s | ", tokens[i]);
+unsigned int get_split_size(char *line)
+{
+  unsigned size = 0;
+  char *c = line;
+  while (*c != '\0')
+  {
+    if (*c == ';')
+      size++;
+    c++;
   }
-  printf("\n");
+  return size + 1;
 }
 
-int main(int argc, char **argv){
+char **malloc_tokens(char *line, unsigned *size)
+{
+  *size = get_split_size(line);
+  char **tokens = malloc(sizeof(char *) * (*size));
+  tokens[0] = line;
+  return tokens;
+}
+
+char **split(char *line, char *delim, unsigned *size)
+{
+  unsigned pos = 0;
+  char *c = NULL;
+
+  char **tokens = malloc_tokens(line, size);
+  for (c = tokens[0] + 1; *c != '\0'; c++)
+  {
+    if (*c == delim[0])
+    {
+      *c = '\0';
+      pos++;
+      tokens[pos] = c + 1;
+    }
+  }
+
+  return tokens;
+}
+
+void check_endline(FILE *data)
+{
+  char c = fgetc(data);
+  if (c != '\n')
+  {
+    ungetc(c, data);
+  }
+}
+
+char *readline(FILE *data)
+{
+  int size = 4096;
+  size_t len_read = 0;
+  char *line = (char *)malloc(sizeof(char) * size);
+  int line_lenght = 0;
+  do
+  {
+    len_read = fread(&line[line_lenght], sizeof(char), 1, data);
+    if (len_read > 0)
+    {
+      line_lenght++;
+      if (line_lenght == size)
+      {
+        size <<= 1;
+        line = realloc(line, sizeof(char) * size);
+      }
+    }
+  } while (line[line_lenght - 1] != '\n' && line[line_lenght - 1] != '\r' && len_read > 0);
+
+  if (line_lenght == 0)
+    return NULL;
+  line[line_lenght - 1] = '\0';
+  check_endline(data);
+
+  line = realloc(line, line_lenght);
+  return line;
+}
+
+void free_tokens(char **tokens)
+{
+  free(tokens[0]);
+  free(tokens);
+  tokens = NULL;
+}
+
+void display_on_screen(/*recebe os tipos de filtros*/){
+  
+}
+
+typedef struct colunas
+  {
+    char RptDt[11];
+    char TckrSymb[50];
+    char Asst[11];
+    char XprtnDt[11];
+    char ExrcPric[9];
+    char OptnStyle[9];
+    int CvrdQty[16];
+    int TtlBlckPos[13];
+    int UcvrdQty[16];
+  } 
+  dados;
+
+void save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
+ char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2){
+  malloc_tokens(line, &size);
+  malloc_tokens(line2, &size2);
+  coluna = malloc(tam * sizeof(dados));
+  for(int i = 0; i >= 0; i++){
+    line2 = readline(arquivo2);
+    line = readline(arquivo);
+    tokens = split(line, ";", &size);
+    if (line == NULL && line2 == NULL)
+    {
+      break;
+    }
+    
+    do
+    {
+      if (instruments != NULL)
+      {
+        free_tokens(instruments);
+        instruments = NULL;
+      }
+      line2 = readline(arquivo2);
+      if (line2 != NULL)
+      {
+        instruments = split(line2, ";", &size2);
+      }
+      
+    } while ((strcmp(tokens[1], instruments[1]) != 0) && line2 != NULL);
+  
+    strcpy(coluna[i].TckrSymb, instruments[1]);
+    if (strcmp(tokens[1], coluna[i].TckrSymb))
+    {
+      strcpy(coluna[i].RptDt, instruments[0]);
+      strcpy(coluna[i].Asst, instruments[2]);
+      strcpy(coluna[i].XprtnDt, instruments[7]);
+      strcpy(coluna[i].ExrcPric, instruments[35]);
+      strcpy(coluna[i].OptnStyle, instruments[36]);
+      *coluna[i].CvrdQty = atoi(tokens[9]);
+      *coluna[i].TtlBlckPos = atoi(tokens[10]);
+      *coluna[i].UcvrdQty = atoi(tokens[11]);
+    }
+    else
+    {
+      strcpy(coluna[i].RptDt, instruments[0]);
+      strcpy(coluna[i].Asst, instruments[2]);
+      strcpy(coluna[i].XprtnDt, instruments[7]);
+      strcpy(coluna[i].ExrcPric, instruments[35]);
+      strcpy(coluna[i].OptnStyle, instruments[36]);
+      *coluna[i].CvrdQty = 0;
+      *coluna[i].TtlBlckPos = 0;
+      *coluna[i].UcvrdQty, 0;
+      
+      if (line != NULL)
+      {
+        strcpy(coluna[i+1].TckrSymb, tokens[1]);
+        strcpy(coluna[i+1].RptDt, tokens[0]);
+        strcpy(coluna[i+1].Asst, tokens[3]);
+        strcpy(coluna[i+1].XprtnDt, " ");
+        strcpy(coluna[i+1].ExrcPric, " ");
+        strcpy(coluna[i+1].OptnStyle, " ");
+        *coluna[i+1].CvrdQty = atoi(tokens[9]);
+        *coluna[i+1].TtlBlckPos = atoi(tokens[10]);
+        *coluna[i+1].UcvrdQty = atoi(tokens[11]);
+      }
+        i++;  
+    }tam++;
+      
+    coluna = realloc(coluna, (tam * sizeof(dados)));
+
+    free_tokens(tokens);
+    free(line);
+    free_tokens(instruments);
+    free(line2);
+  }
+}
+
+
+
+int main(int argc, char **argv)
+{
   FILE *arquivo = fopen(argv[1], "r");
   FILE *arquivo2 = fopen(argv[2], "r");
-  char **tokens = NULL;
-  unsigned int size;
-  char *line;
-
-  typedef struct dados{
-    char RptDt;
-    char TckrSymb[size];
-    char Asst;
-    char XprtnDt;
-    char ExrcPric;
-    char OptnStyle;
-    char CvrdQty;
-    char TtlBlckPos;
-    char UcvrdQty;
-
-  } dados;
-  
-  dados *coluna = calloc( 17, sizeof(dados));
+  char **tokens = NULL, **instruments = NULL;
+  unsigned int size, size2;
+  char *line, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
+  int tam = 9;
+  dados *coluna;
+  coluna = malloc(tam * sizeof(dados));
 
   printf("=====Dados dos Derivativos=====\n");
-  for(int i = 0; i >= 0; i++){
+  printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+  save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
+printf("teste\n");
+  for (int i = 0; i < 8; i++)
+  {
     line = readline(arquivo);
-    if (line == NULL)
-    {
-      break;
-    }
-
     tokens = split(line, ";", &size);
-    coluna = realloc(coluna, sizeof(dados) * 17);
-    for (int j = 0; j < 17; j++)
+    do
     {
-      if (j == 1)
+      if (instruments != NULL)
       {
-        strcpy(coluna->TckrSymb, tokens[j]);
+        free_tokens(instruments);
+        instruments = NULL;
       }
-      /*if (j == 9)
+      line2 = readline(arquivo2);
+      if (line2 != NULL)
       {
-        strcpy(coluna->CvrdQty, tokens[j]);
-      }*/
+        instruments = split(line2, ";", &size2);
+      }
+      
+    } while ((strcmp(tokens[1], instruments[1]) != 0) && line2 != NULL);
 
-    }
-    //printf("%s  |", coluna->CvrdQty);
-    printf("%s\n", coluna->TckrSymb);
-    //printline(tokens, size);
-    free(tokens);
-    free(line);
-  }
+    printf("|  %-15s | %-10s | %-10s ", tokens[1], instruments[2], instruments[10]);
+    printf("| %8s | %9s ", instruments[35], instruments[36]);
+    printf("| %9s | %11s | %9s |\n", tokens[9], tokens[10], tokens[11]);
 
-  printf("\n\n=====Dados dos Instrumentos=====\n");
-  for(int i = 0; i >= 0; i++){
-    
-    line = readline(arquivo2);
-    if(line == NULL){
-      break;
-    }
-    tokens = split(line, ";", &size);
-    //printline(tokens, size);
-    free(tokens);
-    free(line);
-  }
-  printf("size :%i", size);
+    free_tokens(tokens);
+    tam++;
+    coluna = realloc(coluna, (tam * sizeof(dados)));
+  } 
+  
+  free_tokens(instruments);
+
   fclose(arquivo);
   fclose(arquivo2);
 }
-
-//chamar readline em um laço para contar quantas linhas tem o arquivo e usar no tamanho dos dados da estrutura
