@@ -71,8 +71,9 @@ char *readline(FILE *data)
     }
   } while (line[line_lenght - 1] != '\n' && line[line_lenght - 1] != '\r' && len_read > 0);
 
-  if (line_lenght == 0)
+  if (line_lenght == 0){
     return NULL;
+  }
   line[line_lenght - 1] = '\0';
   check_endline(data);
 
@@ -82,96 +83,118 @@ char *readline(FILE *data)
 
 void free_tokens(char **tokens)
 {
-  //free(tokens[0]);
+  free(tokens[0]);
   free(tokens);
   tokens = NULL;
 }
 
 void display_on_screen(/*recebe os tipos de filtros*/){
+
   
 }
 
 typedef struct colunas
   {
-    char RptDt[11];
-    char TckrSymb[50];
-    char Asst[11];
-    char XprtnDt[11];
-    char ExrcPric[9];
-    char OptnStyle[9];
-    long int CvrdQty[16];
-    long int TtlBlckPos[13];
-    long int UcvrdQty[16];
+    char RptDt[20];
+    char TckrSymb[100];
+    char Asst[20];
+    char XprtnDt[20];
+    char ExrcPric[20];
+    char OptnStyle[20];
+    char CvrdQty[20];
+    char TtlBlckPos[20];
+    char UcvrdQty[20];
   } 
   dados;
 
-void save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
- char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2){
+void save_to_arquive(int total_linhas, dados *coluna){
+  FILE *save = fopen("save.csv", "w");
+  char *temporario = malloc(700 * sizeof(char*));
+  for(int i = 0; i < total_linhas; i++){
+    strcpy(temporario, coluna[i].RptDt); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].TckrSymb); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].Asst); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].XprtnDt); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].ExrcPric); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].OptnStyle); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].CvrdQty); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].TtlBlckPos); //strcpy(temporario, ";");
+    strcpy(temporario, coluna[i].UcvrdQty);
 
-  int fim = 0;
-  for(int i = 0; i >= 0; i++){
-    line2 = readline(arquivo2);
-    if(line2 == NULL){
-      break;
-    }
-    line = readline(arquivo);
-    if(line == NULL){
-      fim = 1;
-    }
-    tokens = split(line, ";", &size);
-    instruments = split(line2, ";", &size2);
-  
-    strcpy(coluna[i].TckrSymb, instruments[1]);
-    if (strcmp(tokens[1], coluna[i].TckrSymb) == 0 && line2 != NULL)
-    {
-      strcpy(coluna[i].RptDt, instruments[0]);
-      strcpy(coluna[i].Asst, instruments[2]);
-      strcpy(coluna[i].XprtnDt, instruments[7]);
-      strcpy(coluna[i].ExrcPric, instruments[35]);
-      strcpy(coluna[i].OptnStyle, instruments[36]);
-      *coluna[i].CvrdQty = atoi(tokens[9]);
-      *coluna[i].TtlBlckPos = atoi(tokens[10]);
-      *coluna[i].UcvrdQty = atoi(tokens[11]);
-      tam++;
-    }
-    else
-    { coluna = realloc(coluna, sizeof(dados) * tam);
-      strcpy(coluna[i].RptDt, instruments[0]);
-      strcpy(coluna[i].Asst, instruments[2]);
-      strcpy(coluna[i].XprtnDt, instruments[7]);
-      strcpy(coluna[i].ExrcPric, instruments[35]);
-      strcpy(coluna[i].OptnStyle, instruments[36]);
-      *coluna[i].CvrdQty = 0;
-      *coluna[i].TtlBlckPos = 0;
-      *coluna[i].UcvrdQty = 0;
-      tam++;
-      coluna = realloc(coluna, sizeof(dados) * tam);
-      if (fim == 0)
+      for (int j = 0; j < 9; j++)
       {
-        strcpy(coluna[i+1].TckrSymb, tokens[1]);
-        strcpy(coluna[i+1].RptDt, tokens[0]);
-        strcpy(coluna[i+1].Asst, tokens[3]);
-        strcpy(coluna[i+1].XprtnDt, " \0");
-        strcpy(coluna[i+1].ExrcPric, " \0");
-        strcpy(coluna[i+1].OptnStyle, " \0");
-        *coluna[i+1].CvrdQty = atoi(tokens[9]);
-        *coluna[i+1].TtlBlckPos = atoi(tokens[10]);
-        *coluna[i+1].UcvrdQty = atoi(tokens[11]);
-        i++;
-        tam++; 
-        coluna = realloc(coluna, sizeof(dados) * tam);
+        fprintf(save, "%s;", &temporario[j]);
       }
-    }
-
-    free_tokens(tokens);
-    free_tokens(instruments);
-    free(line);
-    free(line2);
-    line = NULL; 
-    line2 = NULL;
+      fprintf(save, "\n");
+      
   }
+  fclose(save);
 }
 
+
+int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
+ char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2){
+  long int i = 0;
+    
+  for (i = 0; i >= 0; i++)
+  {
+    line = readline(arquivo);
+    line2 = readline(arquivo2);
+
+    if (line == NULL && line2 == NULL)
+    {
+      break;
+    }
+    
+
+    tokens = split(line, ";", &size);
+    instruments = split(line2, ";", &size2);
+
+    strcpy(coluna[i].TckrSymb, instruments[1]);
+    strcpy(coluna[i].RptDt, instruments[0]);
+    strcpy(coluna[i].Asst, instruments[2]);
+    strcpy(coluna[i].XprtnDt, instruments[7]);
+    strcpy(coluna[i].ExrcPric, instruments[35]);
+    strcpy(coluna[i].OptnStyle, instruments[36]);
+    strcpy(coluna[i].CvrdQty, "");
+    strcpy(coluna[i].TtlBlckPos, "");
+    strcpy(coluna[i].UcvrdQty, "");
+    printf("%s\n", coluna[i].TckrSymb);
+    tam++;
+    coluna = realloc(coluna, sizeof(dados) * tam);
+
+    if (strcmp(instruments[1], tokens[1]) == 0 && line != NULL)
+    {
+      strcpy(coluna[i].CvrdQty, tokens[9]);
+      strcpy(coluna[i].TtlBlckPos, tokens[10]);
+      strcpy(coluna[i].UcvrdQty, tokens[11]);
+      tam++;
+      coluna = realloc(coluna, sizeof(dados) * tam);
+      printf("  %s\n", coluna[i].TckrSymb);
+    }
+    else
+    {
+      strcpy(coluna[i+1].TckrSymb, tokens[1]);
+      strcpy(coluna[i+1].RptDt, tokens[0]);
+      strcpy(coluna[i+1].Asst, tokens[3]);
+      strcpy(coluna[i+1].XprtnDt, "");
+      strcpy(coluna[i+1].ExrcPric, "");
+      strcpy(coluna[i+1].OptnStyle, "");
+      strcpy(coluna[i+1].CvrdQty, tokens[9]);
+      strcpy(coluna[i+1].TtlBlckPos, tokens[10]);
+      strcpy(coluna[i+1].UcvrdQty, tokens[11]);
+      printf("  %s\n", coluna[i+1].TckrSymb);
+      tam++;
+      i++;
+      coluna = realloc(coluna, sizeof(dados) * tam);
+    }
+    
+
+    }
+    free_tokens(instruments);
+    free_tokens(tokens);
+    return i;
+  }
 
 
 int main(int argc, char **argv)
@@ -180,15 +203,17 @@ int main(int argc, char **argv)
   FILE *arquivo2 = fopen(argv[2], "r");
   char **tokens = NULL, **instruments = NULL;
   unsigned int size, size2;
-  char *line, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
+  char *line = NULL, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
   int tam = 5;
+  long int total_linhas = 0;
   dados *coluna;
   coluna = (dados *) (malloc(sizeof(dados) * tam));
 
   printf("=====Dados dos Derivativos=====\n");
   printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
-  save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
-  
+  total_linhas = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
+  //printf("total de linhas: %i\n", total_linhas);
+  //save_to_arquive(total_linhas, coluna);
   /*for (int i = 0; i < 8; i++)
   {
     line = readline(arquivo);
@@ -218,7 +243,7 @@ int main(int argc, char **argv)
   } */
   
   //free_tokens(instruments);
-
+  free(coluna);
   fclose(arquivo);
   fclose(arquivo2);
 }
