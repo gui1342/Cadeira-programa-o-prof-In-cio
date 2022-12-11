@@ -1,4 +1,4 @@
-//o codigo ainda nao esta completo
+//o codigo ainda nao esta completo, estou quase finalizando...
 
 
 #include <stdio.h>
@@ -110,10 +110,10 @@ typedef struct colunas
   } 
   dados;
 
-void save_to_arquive(int total_linhas, dados *coluna){
+void save_to_arquive(long int *total_linhas, dados *coluna){
   FILE *save = fopen("save.csv", "w");
   
-  for(int i = 0; i < total_linhas; i++){
+  for(int i = 0; i < *total_linhas; i++){
     fprintf(save, "%s;%s;%s;", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst);
     fprintf(save, "%s;%s;%s;", coluna[i].XprtnDt, coluna[i].ExrcPric, coluna[i].OptnStyle);
     fprintf(save, "%s;%s;%s\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
@@ -122,13 +122,18 @@ void save_to_arquive(int total_linhas, dados *coluna){
 }
 
 
-int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
- char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2){
+dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **tokens,
+ char **instruments, FILE *arquivo, FILE *arquivo2, unsigned int size, unsigned int size2, long int *total_linhas){
   long int i = 0;
   int fim = 0;
   int fim1 = 0;
   for (i = 0; i >= 0; i++)
   { 
+    if ((tam) >= i)
+    {
+      coluna = (dados *) realloc(coluna, (sizeof(dados) * (tam + 5)));
+    }
+    
     line = readline(arquivo);
 
     if (feof(arquivo))
@@ -145,7 +150,8 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
       instruments = NULL;
       line2 = NULL;
       fim1 = 1;
-      return i;
+      *total_linhas = i;
+      return coluna;
     }
     else  instruments = split(line2, ";", &size2);
           strcpy(coluna[i].TckrSymb, instruments[1]);
@@ -159,7 +165,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
           strcpy(coluna[i].UcvrdQty, "");
           //printf("i = %li %s\n", i, coluna[i].RptDt);
           tam++;
-          //coluna = realloc(coluna, sizeof(dados) * tam);
+          //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     
     if (tokens != NULL && instruments != NULL && strcmp(instruments[1], tokens[1]) == 0)
     {
@@ -167,7 +173,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       tam++;
-      //coluna = realloc(coluna, sizeof(dados) * tam);
+      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
       //printf("i = %li %s\n", i, coluna[i].RptDt);
     }
 
@@ -185,7 +191,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       //printf("i = %li %s\n", i, coluna[i].RptDt);
       tam++;
-      //coluna = realloc(coluna, sizeof(dados) * tam);
+      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     }
   }
 }
@@ -199,17 +205,16 @@ int main(int argc, char **argv)
   char **tokens = NULL, **instruments = NULL;
   unsigned int size, size2;
   char *line = NULL, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
-  int tam = 49;
+  int tam = 4;
   long int total_linhas = 0;
   dados *coluna;
   coluna = (malloc(sizeof(dados) * tam));
 
   printf("=====Dados dos Derivativos=====\n");
   printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
-  total_linhas = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
-  printf("total de linhas: %li\n", total_linhas);
-  printf(" %s\n", coluna[48].TckrSymb);
-  save_to_arquive(total_linhas, coluna);
+  coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
+  //printf("total de linhas: %ld\n", total_linhas);
+  save_to_arquive(&total_linhas, coluna);
   /*for (int i = 0; i < 8; i++)
   {
     line = readline(arquivo);
