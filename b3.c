@@ -112,28 +112,11 @@ typedef struct colunas
 
 void save_to_arquive(int total_linhas, dados *coluna){
   FILE *save = fopen("save.csv", "w");
-  char **temporario = malloc(sizeof(char *) * (10));
-  char sep = 59;
-  if (temporario == NULL)
-  {
-    printf("falha alocação");
-  }
   
-  for(int i = 5; i < 6; i++){
-    strcpy(temporario[0], coluna[i].RptDt); //strcat(temporario[0], ";");
-    strcpy(temporario[1], coluna[i].TckrSymb); //strcat(temporario[1], ";");
-    //strcpy(temporario[2], coluna[i].Asst); //strcat(temporario[2], ";");
-    //strcpy(temporario[3], coluna[i].XprtnDt); //strcat(temporario[3], ";");
-    //strcpy(temporario[4], coluna[i].ExrcPric); //strcat(temporario[4], ";");
-    //strcpy(temporario[5], coluna[i].OptnStyle); //strcat(temporario[5], ";");
-    //strcpy(temporario[6], coluna[i].CvrdQty); //strcat(temporario[6], ";");
-    //strcpy(temporario[7], coluna[i].TtlBlckPos); //strcat(temporario[7], ";");
-    //strcpy(temporario[8], coluna[i].UcvrdQty); //strcat(temporario[8], "\n");
-
-    for (int j = 0; j < 9; j++)
-    {
-      fprintf(save, "%s%c", coluna[i].TckrSymb, sep);
-    }
+  for(int i = 0; i < total_linhas; i++){
+    fprintf(save, "%s;%s;%s;", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst);
+    fprintf(save, "%s;%s;%s;", coluna[i].XprtnDt, coluna[i].ExrcPric, coluna[i].OptnStyle);
+    fprintf(save, "%s;%s;%s\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
   }
   fclose(save);
 }
@@ -145,7 +128,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
   int fim = 0;
   int fim1 = 0;
   for (i = 0; i >= 0; i++)
-  {
+  { 
     line = readline(arquivo);
 
     if (feof(arquivo))
@@ -176,7 +159,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
           strcpy(coluna[i].UcvrdQty, "");
           //printf("i = %li %s\n", i, coluna[i].RptDt);
           tam++;
-          coluna = realloc(coluna, sizeof(dados) * tam);
+          //coluna = realloc(coluna, sizeof(dados) * tam);
     
     if (tokens != NULL && instruments != NULL && strcmp(instruments[1], tokens[1]) == 0)
     {
@@ -184,7 +167,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       tam++;
-      coluna = realloc(coluna, sizeof(dados) * tam);
+      //coluna = realloc(coluna, sizeof(dados) * tam);
       //printf("i = %li %s\n", i, coluna[i].RptDt);
     }
 
@@ -202,7 +185,7 @@ int save_to_struct(int tam , dados *coluna, char *line, char *line2, char **toke
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       //printf("i = %li %s\n", i, coluna[i].RptDt);
       tam++;
-      coluna = realloc(coluna, sizeof(dados) * tam);
+      //coluna = realloc(coluna, sizeof(dados) * tam);
     }
   }
 }
@@ -216,16 +199,16 @@ int main(int argc, char **argv)
   char **tokens = NULL, **instruments = NULL;
   unsigned int size, size2;
   char *line = NULL, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
-  int tam = 5;
+  int tam = 49;
   long int total_linhas = 0;
   dados *coluna;
-  coluna = (dados *) (malloc(sizeof(dados) * tam));
+  coluna = (malloc(sizeof(dados) * tam));
 
   printf("=====Dados dos Derivativos=====\n");
   printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
   total_linhas = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2);
   printf("total de linhas: %li\n", total_linhas);
-  printf("%s", coluna[8]);
+  printf(" %s\n", coluna[48].TckrSymb);
   save_to_arquive(total_linhas, coluna);
   /*for (int i = 0; i < 8; i++)
   {
