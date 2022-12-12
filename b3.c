@@ -1,5 +1,3 @@
-//o codigo esta quase completo, irei terminar na segunda feira dia 11/12/2022
-
 #include <cs50.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,11 +89,6 @@ void free_tokens(char **tokens)
   tokens = NULL;
 }
 
-void display_on_screen(/*recebe os tipos de filtros*/){
-
-  
-}
-
 typedef struct colunas
   {
     char RptDt[20];
@@ -163,9 +156,7 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
           strcpy(coluna[i].CvrdQty, "");
           strcpy(coluna[i].TtlBlckPos, "");
           strcpy(coluna[i].UcvrdQty, "");
-          //printf("i = %li %s\n", i, coluna[i].RptDt);
           tam++;
-          //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     
     if (tokens != NULL && instruments != NULL && strcmp(instruments[1], tokens[1]) == 0)
     {
@@ -173,8 +164,6 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       tam++;
-      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
-      //printf("i = %li %s\n", i, coluna[i].RptDt);
     }
 
     else if (fim == 0)
@@ -189,9 +178,7 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
       strcpy(coluna[i].CvrdQty, tokens[9]);
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
-      //printf("i = %li %s\n", i, coluna[i].RptDt);
       tam++;
-      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     }
   }
 }
@@ -203,7 +190,7 @@ int main(int argc, char **argv)
   FILE *arquivo = fopen(argv[1], "r");
   FILE *arquivo2 = fopen(argv[2], "r");
   char **tokens = NULL, **instruments = NULL;
-  unsigned int size, size2;
+  unsigned int size, size2, indice_separar_preco = 2;
   char *line = NULL, *line2 = NULL;
   int tam = 4;
   long int total_linhas = 0;
@@ -212,8 +199,9 @@ int main(int argc, char **argv)
   string ativo;
   dados *coluna;
   coluna = (malloc(sizeof(dados) * tam));
+  string temp;
 
-  printf("                   Menu\n(1) SALVAR DADOS EM UM ARQUIVO .csv\n");
+  printf("                   MENU\n(1) SALVAR DADOS EM UM ARQUIVO .csv\n");
   printf("(2) EXIBIR DADOS NA TELA COM FILTRO DE QUANTIDADE\n");
   printf("(3) EXIBIR DADOS NA TELA COM FILTRO DE CÓDIGO DE UM ATIVO-BASE\n");
   printf("(4) EXIBIR DADOS NA TELA COM FILTRO: COMBINAÇÃO DOS DOIS FILTROS ANTERIORES\n");
@@ -234,14 +222,17 @@ int main(int argc, char **argv)
     } while (n <= 0);
 
     printf("=====Dados dos Derivativos=====\n");
-    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    printf("|    DATA    |      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
     coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
     for (int i = 0; i < total_linhas; i++)
     {
       if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n)
       {
-        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        tokens = NULL;
+        printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %-9s ", temp, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
       }
     }
@@ -250,14 +241,17 @@ int main(int argc, char **argv)
   case 3:
     ativo = get_string("DIGITE O NOME DO ATIVO QUE DESEJA PESQUISAR\n");
     printf("=====Dados dos Derivativos=====\n");
-    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    printf("|    DATA    |      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
     coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
     for (int i = 0; i < total_linhas; i++)
     {
       if (strcmp(coluna[i].Asst, ativo) == 0)
       {
-        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        tokens = NULL;
+        printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %-9s ", temp, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
       }
     }
@@ -271,14 +265,17 @@ int main(int argc, char **argv)
     ativo = get_string("DIGITE O NOME DO ATIVO QUE DESEJA PESQUISAR\n");
 
     printf("=====Dados dos Derivativos=====\n");
-    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    printf("|    DATA    |      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
     coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
     for (int i = 0; i < total_linhas; i++)
     {
       if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n && strcmp(coluna[i].Asst, ativo) == 0)
       {
-        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        tokens = NULL;
+        printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %9s ", temp, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
       }
     }
