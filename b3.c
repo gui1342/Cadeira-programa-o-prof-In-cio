@@ -1,6 +1,6 @@
-//o codigo ainda nao esta completo, estou quase finalizando...
+//o codigo esta quase completo, irei terminar na segunda feira dia 11/12/2022
 
-
+#include <cs50.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -204,46 +204,93 @@ int main(int argc, char **argv)
   FILE *arquivo2 = fopen(argv[2], "r");
   char **tokens = NULL, **instruments = NULL;
   unsigned int size, size2;
-  char *line = NULL, *line2 = NULL; //line = arquivo 1, line2 = arquivo 2
+  char *line = NULL, *line2 = NULL;
   int tam = 4;
   long int total_linhas = 0;
+  int escolha;
+  int n;
+  string ativo;
   dados *coluna;
   coluna = (malloc(sizeof(dados) * tam));
 
-  printf("=====Dados dos Derivativos=====\n");
-  printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
-  coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
-  //printf("total de linhas: %ld\n", total_linhas);
-  save_to_arquive(&total_linhas, coluna);
-  /*for (int i = 0; i < 8; i++)
+  printf("                   Menu\n(1) SALVAR DADOS EM UM ARQUIVO .csv\n");
+  printf("(2) EXIBIR DADOS NA TELA COM FILTRO DE QUANTIDADE\n");
+  printf("(3) EXIBIR DADOS NA TELA COM FILTRO DE CÓDIGO DE UM ATIVO-BASE\n");
+  printf("(4) EXIBIR DADOS NA TELA COM FILTRO: COMBINAÇÃO DOS DOIS FILTROS ANTERIORES\n");
+  printf("(5) SAIR\n");
+  escolha = get_int("->");
+  switch (escolha)
   {
-    line = readline(arquivo);
-    tokens = split(line, ";", &size);
+  case 1:
+    coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
+    save_to_arquive(&total_linhas, coluna);
+    printf("OS DADOS FORAM SALVOS NO ARQUIVO ""SAVE.CSV"" COM SUCESSO!\n");
+    break;
+  
+  case 2:
     do
     {
-      if (instruments != NULL)
-      {
-        free_tokens(instruments);
-        instruments = NULL;
-      }
-      line2 = readline(arquivo2);
-      if (line2 != NULL)
-      {
-        instruments = split(line2, ";", &size2);
-      }
-      
-    } while ((strcmp(tokens[1], instruments[1]) != 0) && line2 != NULL);
+      n = get_int("DIGITE UM NÚMERO INTEIRO MAIOR QUE 0\n");
+    } while (n <= 0);
 
-    printf("|  %-15s | %-10s | %-10s ", tokens[1], instruments[2], instruments[10]);
-    printf("| %8s | %9s ", instruments[35], instruments[36]);
-    printf("| %9s | %11s | %9s |\n", tokens[9], tokens[10], tokens[11]);
-
-    free_tokens(tokens);
-    tam++;
-    coluna = realloc(coluna, (tam * sizeof(dados)));
-  } */
+    printf("=====Dados dos Derivativos=====\n");
+    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
+    for (int i = 0; i < total_linhas; i++)
+    {
+      if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n)
+      {
+        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+      }
+    }
+    break;
   
-  //free_tokens(instruments);
+  case 3:
+    ativo = get_string("DIGITE O NOME DO ATIVO QUE DESEJA PESQUISAR\n");
+    printf("=====Dados dos Derivativos=====\n");
+    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
+    for (int i = 0; i < total_linhas; i++)
+    {
+      if (strcmp(coluna[i].Asst, ativo) == 0)
+      {
+        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+      }
+    }
+    break;
+
+  case 4:
+    do
+    {
+      n = get_int("DIGITE UM NÚMERO INTEIRO MAIOR QUE 0\n");
+    } while (n <= 0);
+    ativo = get_string("DIGITE O NOME DO ATIVO QUE DESEJA PESQUISAR\n");
+
+    printf("=====Dados dos Derivativos=====\n");
+    printf("|      Codigo      |    Ativo   |    Vcto    |  Strike  |   Tipo    |  Coberto  |   Travado   |  Descob.  |\n");
+    coluna = save_to_struct(tam, coluna, line, line2, tokens, instruments, arquivo, arquivo2, size, size2, &total_linhas);
+    for (int i = 0; i < total_linhas; i++)
+    {
+      if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n && strcmp(coluna[i].Asst, ativo) == 0)
+      {
+        printf("|  %-15s | %-10s | %-10s ", coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
+        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
+        printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+      }
+    }
+    break;
+  
+  case 5:
+    printf("O PROGRAMA FOI ENCERRADO COM SUCESSO!\n");
+    break;
+  default:
+    break;
+  }
+
   free(instruments);
   free(tokens);
   free(coluna);
