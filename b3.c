@@ -156,7 +156,9 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
           strcpy(coluna[i].CvrdQty, "");
           strcpy(coluna[i].TtlBlckPos, "");
           strcpy(coluna[i].UcvrdQty, "");
+          //printf("i = %li %s\n", i, coluna[i].RptDt);
           tam++;
+          //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     
     if (tokens != NULL && instruments != NULL && strcmp(instruments[1], tokens[1]) == 0)
     {
@@ -164,6 +166,8 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
       tam++;
+      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
+      //printf("i = %li %s\n", i, coluna[i].RptDt);
     }
 
     else if (fim == 0)
@@ -178,7 +182,9 @@ dados * save_to_struct(int tam , dados *coluna, char *line, char *line2, char **
       strcpy(coluna[i].CvrdQty, tokens[9]);
       strcpy(coluna[i].TtlBlckPos, tokens[10]);
       strcpy(coluna[i].UcvrdQty, tokens[11]);
+      //printf("i = %li %s\n", i, coluna[i].RptDt);
       tam++;
+      //coluna = (dados *) realloc(coluna, sizeof(dados) * tam);
     }
   }
 }
@@ -199,7 +205,7 @@ int main(int argc, char **argv)
   string ativo;
   dados *coluna;
   coluna = (malloc(sizeof(dados) * tam));
-  string temp;
+  char *temp;
 
   printf("                   MENU\n(1) SALVAR DADOS EM UM ARQUIVO .csv\n");
   printf("(2) EXIBIR DADOS NA TELA COM FILTRO DE QUANTIDADE\n");
@@ -228,12 +234,14 @@ int main(int argc, char **argv)
     {
       if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n)
       {
-        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
-        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
-        tokens = NULL;
+        //temp = (char*) (malloc(sizeof(char*) * 10));
+        //tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        //strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        //tokens = NULL;
         printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %-9s ", temp, coluna[i].OptnStyle);
+        printf("| %8s | %-9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+        //free(temp);
       }
     }
     break;
@@ -247,12 +255,14 @@ int main(int argc, char **argv)
     {
       if (strcmp(coluna[i].Asst, ativo) == 0)
       {
-        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
-        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
-        tokens = NULL;
+        //temp = (char*) (malloc(sizeof(char*) * 10));
+        //tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        //strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        //tokens = NULL;
         printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %-9s ", temp, coluna[i].OptnStyle);
+        printf("| %8s | %-9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+        //free(temp);
       }
     }
     break;
@@ -271,12 +281,14 @@ int main(int argc, char **argv)
     {
       if (atoi(coluna[i].CvrdQty) >= n && atoi(coluna[i].TtlBlckPos) >= n && atoi(coluna[i].UcvrdQty) >= n && strcmp(coluna[i].Asst, ativo) == 0)
       {
-        tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
-        strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
-        tokens = NULL;
+        //temp = (char*) (malloc(sizeof(char*) * 10));
+        //tokens = split(coluna[i].ExrcPric, ",", &indice_separar_preco);
+        //strcpy(temp, tokens[0]); strcat(temp, "."); strcat(temp, tokens[1]);
+        //tokens = NULL;
         printf("| %-10s |  %-15s | %-10s | %-10s ", coluna[i].RptDt, coluna[i].TckrSymb, coluna[i].Asst, coluna[i].XprtnDt);
-        printf("| %8s | %9s ", temp, coluna[i].OptnStyle);
+        printf("| %8s | %9s ", coluna[i].ExrcPric, coluna[i].OptnStyle);
         printf("| %9s | %11s | %9s |\n", coluna[i].CvrdQty, coluna[i].TtlBlckPos, coluna[i].UcvrdQty);
+        //free(temp);
       }
     }
     break;
